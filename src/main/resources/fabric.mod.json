@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "quickstash",
+  "version": "${version}",
+  "name": "QuickStash",
+  "description": "",
+  "authors": [
+    "DalvSync"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "org.dalvsync.client.quickstashDataGenerator"
+    ],
+    "client": [
+      "org.dalvsync.client.quickstashClient"
+    ],
+    "main": [
+      "org.dalvsync.quickstash"
+    ]
+  },
+  "mixins": [
+    "quickstash.mixins.json",
+    {
+      "config": "quickstash.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
