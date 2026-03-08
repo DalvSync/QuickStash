@@ -9,6 +9,8 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 public class quickstashClient implements ClientModInitializer {
     private static KeyBinding stashKeyBinding;
@@ -19,14 +21,26 @@ public class quickstashClient implements ClientModInitializer {
                 "key.quickstash.stash",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_X,
-                // Ось єдиний правильний варіант для 4-го параметра:
                 KeyBinding.Category.create(Identifier.of("quickstash", "general"))
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (stashKeyBinding.wasPressed()) {
                 if (client.player != null && client.currentScreen == null) {
-                    ClientPlayNetworking.send(new StashRequestPayload());
+
+                    boolean hasItemsToSort = false;
+                    for (int i = 9; i < 36; i++) {
+                        if (!client.player.getInventory().getStack(i).isEmpty()) {
+                            hasItemsToSort = true;
+                            break;
+                        }
+                    }
+
+                    if (hasItemsToSort) {
+                        ClientPlayNetworking.send(new StashRequestPayload());
+                    } else {
+                        client.player.sendMessage(Text.translatable("message.quickstash.empty_inventory").formatted(Formatting.YELLOW), true);
+                    }
                 }
             }
         });

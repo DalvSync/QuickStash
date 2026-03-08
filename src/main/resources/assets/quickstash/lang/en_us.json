@@ -1,5 +1,8 @@
 {
   "key.category.quickstash.general": "Quick Stash",
   "key.quickstash.stash": "Stash Items to Nearby Chests",
-  "message.quickstash.success": "Items successfully sorted!"
+  "message.quickstash.success": "Items successfully sorted!",
+  "message.quickstash.cooldown": "Wait!",
+  "message.quickstash.empty_inventory": "Nothing to sort",
+  "message.quickstash.no_containers": "There are no chests nearby"
 }

@@ -1,5 +1,8 @@
 {
   "key.category.quickstash.general": "Quick Stash",
   "key.quickstash.stash": "Скласти речі у найближчі скрині",
-  "message.quickstash.success": "Речі успішно відсортовано!"
+  "message.quickstash.success": "Речі успішно відсортовано!",
+  "message.quickstash.cooldown": "Зачекай!",
+  "message.quickstash.empty_inventory": "Нічого сортувати",
+  "message.quickstash.no_containers": "Поблизу немає скринь"
 }

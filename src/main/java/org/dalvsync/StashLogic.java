@@ -10,59 +10,71 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class StashLogic {
 
+    private static final Map<UUID, Long> COOLDOWNS = new HashMap<>();
+    private static final long COOLDOWN_TIME = 1000;
+
     public static void performStash(ServerPlayerEntity player) {
-        // Використовуємо правильний метод для 1.21.11
+        UUID playerId = player.getUuid();
+        long currentTime = System.currentTimeMillis();
         World world = player.getEntityWorld();
         BlockPos playerPos = player.getBlockPos();
         int radius = 8;
         boolean movedAnyItem = false;
 
+        if (COOLDOWNS.containsKey(playerId)) {
+            long lastUsedTime = COOLDOWNS.get(playerId);
+            if (currentTime - lastUsedTime < COOLDOWN_TIME) {
+                player.sendMessage(Text.translatable("message.quickstash.cooldown").formatted(Formatting.RED), true);
+                return;
+            }
+        }
+        COOLDOWNS.put(playerId, currentTime);
+
         PlayerInventory playerInv = player.getInventory();
 
-        // Генеруємо всі координати блоків навколо гравця в радіусі 8х8х8
         Iterable<BlockPos> blocksInRadius = BlockPos.iterate(
                 playerPos.add(-radius, -radius, -radius),
                 playerPos.add(radius, radius, radius)
         );
 
-        // Скануємо лише основний інвентар (слоти 9-35), ігноруючи Hotbar (0-8) та броню
+        List<Inventory> nearbyInventories = new ArrayList<>();
+        for (BlockPos pos : blocksInRadius) {
+            Inventory targetInventory = HopperBlockEntity.getInventoryAt(world, pos);
+            if (targetInventory != null) {
+                nearbyInventories.add(targetInventory);
+            }
+        }
+
+        if (nearbyInventories.isEmpty()) {
+            player.sendMessage(Text.translatable("message.quickstash.no_containers").formatted(Formatting.YELLOW), true);
+            return;
+        }
+
         for (int i = 9; i < 36; i++) {
             ItemStack playerStack = playerInv.getStack(i);
             if (playerStack.isEmpty()) continue;
 
-            for (BlockPos pos : blocksInRadius) {
-                // HopperBlockEntity.getInventoryAt коректно обробляє подвійні скрині
-                Inventory targetInventory = HopperBlockEntity.getInventoryAt(world, pos);
-                if (targetInventory == null) continue;
-
+            for (Inventory targetInventory : nearbyInventories) {
                 if (tryStashItem(playerStack, targetInventory)) {
                     movedAnyItem = true;
-                    if (playerStack.isEmpty()) break; // Якщо стак порожній, йдемо до наступного предмета
+                    if (playerStack.isEmpty()) break;
                 }
             }
         }
 
-        // ЗВУКОВИЙ ВІДГУК: Відтворюємо звук досвіду, якщо сортування пройшло успішно
-        if (movedAnyItem) {
-            world.playSound(
-                    null, // null означає, що звук буде відправлено всім гравцям поруч, зокрема і нашому
-                    player.getBlockPos(),
-                    SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
-                    SoundCategory.PLAYERS,
-                    0.5f, // Гучність
-                    1.2f  // Висота (Pitch)
-            );
-            player.getInventory().markDirty(); // Оновлюємо інвентар
-        }
         if (movedAnyItem) {
             world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, 1.2f);
 
-            // ДОБАВЛЕНА ЭТА СТРОКА (отправка сообщения)
-            // false = обычный чат. Если поставить true, текст появится красиво над хотбаром (Action Bar)
-            player.sendMessage(Text.translatable("message.quickstash.success"), false);
+            player.sendMessage(Text.translatable("message.quickstash.success").formatted(Formatting.GREEN), true);
 
             player.getInventory().markDirty();
         }
@@ -72,7 +84,6 @@ public class StashLogic {
         boolean containsMatchingItem = false;
         boolean stashed = false;
 
-        // Крок 1: Перевіряємо, чи є в контейнері ТАКИЙ САМИЙ предмет (Data Components)
         for (int i = 0; i < targetInventory.size(); i++) {
             ItemStack targetStack = targetInventory.getStack(i);
             if (!targetStack.isEmpty() && ItemStack.areItemsAndComponentsEqual(playerStack, targetStack)) {
@@ -81,7 +92,6 @@ public class StashLogic {
             }
         }
 
-        // Крок 2: Якщо знайшли збіг, перекладаємо предмети у вільні слоти або доповнюємо стаки
         if (containsMatchingItem) {
             for (int i = 0; i < targetInventory.size(); i++) {
                 if (playerStack.isEmpty()) break;
