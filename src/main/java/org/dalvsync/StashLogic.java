@@ -73,9 +73,7 @@ public class StashLogic {
 
         if (movedAnyItem) {
             world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, 1.2f);
-
             player.sendMessage(Text.translatable("message.quickstash.success").formatted(Formatting.GREEN), true);
-
             player.getInventory().markDirty();
         }
     }
@@ -86,26 +84,24 @@ public class StashLogic {
 
         for (int i = 0; i < targetInventory.size(); i++) {
             ItemStack targetStack = targetInventory.getStack(i);
-            if (!targetStack.isEmpty() && ItemStack.areItemsAndComponentsEqual(playerStack, targetStack)) {
+            if (!targetStack.isEmpty() && ItemStack.canCombine(playerStack, targetStack)) {
                 containsMatchingItem = true;
                 break;
             }
         }
 
-        if (containsMatchingItem) {
-            for (int i = 0; i < targetInventory.size(); i++) {
-                if (playerStack.isEmpty()) break;
-                ItemStack targetStack = targetInventory.getStack(i);
+        if (!containsMatchingItem) {
+            return false;
+        }
 
-                if (targetStack.isEmpty()) {
-                    targetInventory.setStack(i, playerStack.copy());
-                    playerStack.setCount(0);
-                    stashed = true;
-                    targetInventory.markDirty();
-                } else if (ItemStack.areItemsAndComponentsEqual(playerStack, targetStack) && targetStack.getCount() < targetStack.getMaxCount()) {
-                    int spaceLeft = targetStack.getMaxCount() - targetStack.getCount();
+        for (int i = 0; i < targetInventory.size(); i++) {
+            if (playerStack.isEmpty()) break;
+
+            ItemStack targetStack = targetInventory.getStack(i);
+            if (!targetStack.isEmpty() && ItemStack.canCombine(playerStack, targetStack)) {
+                int spaceLeft = targetStack.getMaxCount() - targetStack.getCount();
+                if (spaceLeft > 0) {
                     int amountToMove = Math.min(spaceLeft, playerStack.getCount());
-
                     targetStack.increment(amountToMove);
                     playerStack.decrement(amountToMove);
                     stashed = true;
@@ -113,6 +109,21 @@ public class StashLogic {
                 }
             }
         }
+
+        if (!playerStack.isEmpty()) {
+            for (int i = 0; i < targetInventory.size(); i++) {
+                if (playerStack.isEmpty()) break;
+
+                ItemStack targetStack = targetInventory.getStack(i);
+                if (targetStack.isEmpty()) {
+                    targetInventory.setStack(i, playerStack.copy());
+                    playerStack.setCount(0);
+                    stashed = true;
+                    targetInventory.markDirty();
+                }
+            }
+        }
+
         return stashed;
     }
 }

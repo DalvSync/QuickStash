@@ -1,13 +1,13 @@
 package org.dalvsync.client;
 
-import org.dalvsync.network.StashRequestPayload;
+import org.dalvsync.quickstash;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -17,11 +17,12 @@ public class quickstashClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        // В 1.20.1 категория - это просто текст
         stashKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.quickstash.stash",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_X,
-                "key.category.quickstash.general"
+                "category.quickstash.general"
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -37,7 +38,7 @@ public class quickstashClient implements ClientModInitializer {
                     }
 
                     if (hasItemsToSort) {
-                        ClientPlayNetworking.send(new StashRequestPayload());
+                        ClientPlayNetworking.send(quickstash.STASH_REQUEST_ID, PacketByteBufs.empty());
                     } else {
                         client.player.sendMessage(Text.translatable("message.quickstash.empty_inventory").formatted(Formatting.YELLOW), true);
                     }
