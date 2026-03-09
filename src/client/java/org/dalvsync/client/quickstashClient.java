@@ -21,7 +21,7 @@ public class quickstashClient implements ClientModInitializer {
                 "key.quickstash.stash",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_X,
-                KeyBinding.Category.create(Identifier.of("quickstash", "general"))
+                "key.category.quickstash.general"
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

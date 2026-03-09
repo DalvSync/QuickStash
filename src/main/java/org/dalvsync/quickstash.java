@@ -12,7 +12,7 @@ public class quickstash implements ModInitializer {
     public void onInitialize() {
         PayloadTypeRegistry.playC2S().register(StashRequestPayload.ID, StashRequestPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(StashRequestPayload.ID, (payload, context) -> {
-            context.server().execute(() -> {
+            context.player().getServer().execute(() -> {
                 StashLogic.performStash(context.player());
             });
         });

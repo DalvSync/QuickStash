@@ -25,7 +25,7 @@ public class StashLogic {
     public static void performStash(ServerPlayerEntity player) {
         UUID playerId = player.getUuid();
         long currentTime = System.currentTimeMillis();
-        World world = player.getEntityWorld();
+        World world = player.getWorld();
         BlockPos playerPos = player.getBlockPos();
         int radius = 8;
         boolean movedAnyItem = false;
