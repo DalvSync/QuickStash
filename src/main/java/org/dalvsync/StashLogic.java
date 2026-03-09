@@ -25,7 +25,7 @@ public class StashLogic {
     public static void performStash(ServerPlayerEntity player) {
         UUID playerId = player.getUuid();
         long currentTime = System.currentTimeMillis();
-        World world = player.getEntityWorld();
+        World world = player.getWorld();
         BlockPos playerPos = player.getBlockPos();
         int radius = 8;
         boolean movedAnyItem = false;
@@ -92,20 +92,18 @@ public class StashLogic {
             }
         }
 
-        if (containsMatchingItem) {
-            for (int i = 0; i < targetInventory.size(); i++) {
-                if (playerStack.isEmpty()) break;
-                ItemStack targetStack = targetInventory.getStack(i);
+        if (!containsMatchingItem) {
+            return false;
+        }
 
-                if (targetStack.isEmpty()) {
-                    targetInventory.setStack(i, playerStack.copy());
-                    playerStack.setCount(0);
-                    stashed = true;
-                    targetInventory.markDirty();
-                } else if (ItemStack.areItemsAndComponentsEqual(playerStack, targetStack) && targetStack.getCount() < targetStack.getMaxCount()) {
-                    int spaceLeft = targetStack.getMaxCount() - targetStack.getCount();
+        for (int i = 0; i < targetInventory.size(); i++) {
+            if (playerStack.isEmpty()) break;
+
+            ItemStack targetStack = targetInventory.getStack(i);
+            if (!targetStack.isEmpty() && ItemStack.areItemsAndComponentsEqual(playerStack, targetStack)) {
+                int spaceLeft = targetStack.getMaxCount() - targetStack.getCount();
+                if (spaceLeft > 0) {
                     int amountToMove = Math.min(spaceLeft, playerStack.getCount());
-
                     targetStack.increment(amountToMove);
                     playerStack.decrement(amountToMove);
                     stashed = true;
@@ -113,6 +111,21 @@ public class StashLogic {
                 }
             }
         }
+
+        if (!playerStack.isEmpty()) {
+            for (int i = 0; i < targetInventory.size(); i++) {
+                if (playerStack.isEmpty()) break;
+
+                ItemStack targetStack = targetInventory.getStack(i);
+                if (targetStack.isEmpty()) {
+                    targetInventory.setStack(i, playerStack.copy());
+                    playerStack.setCount(0);
+                    stashed = true;
+                    targetInventory.markDirty();
+                }
+            }
+        }
+
         return stashed;
     }
 }
