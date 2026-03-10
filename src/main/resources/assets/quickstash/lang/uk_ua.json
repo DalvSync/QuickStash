@@ -4,5 +4,6 @@
   "message.quickstash.success": "Речі успішно відсортовано!",
   "message.quickstash.cooldown": "Зачекай!",
   "message.quickstash.empty_inventory": "Нічого сортувати",
-  "message.quickstash.no_containers": "Поблизу немає скринь"
+  "message.quickstash.no_containers": "Поблизу немає скринь",
+  "message.quickstash.full": "Скрині повнні, немає вільного місця"
 }
