@@ -4,5 +4,6 @@
   "message.quickstash.success": "Items successfully sorted!",
   "message.quickstash.cooldown": "Wait!",
   "message.quickstash.empty_inventory": "Nothing to sort",
-  "message.quickstash.no_containers": "There are no chests nearby"
+  "message.quickstash.no_containers": "There are no chests nearby",
+  "message.quickstash.full": "Chests are full, no space left"
 }
