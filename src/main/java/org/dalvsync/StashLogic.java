@@ -37,7 +37,7 @@ public class StashLogic {
         if (COOLDOWNS.containsKey(playerId)) {
             long lastUsedTime = COOLDOWNS.get(playerId);
             if (currentTime - lastUsedTime < COOLDOWN_TIME) {
-                player.sendMessage(Text.translatable("message.quickstash.cooldown").formatted(Formatting.RED), true);
+                player.sendMessage(Text.translatable("message.quickstash.cooldown").formatted(Formatting.DARK_RED), true);
                 return;
             }
         }
