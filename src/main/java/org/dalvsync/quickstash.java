@@ -11,6 +11,8 @@ public class quickstash implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        QuickStashConfig.load();
+
         ServerPlayNetworking.registerGlobalReceiver(STASH_REQUEST_ID, (server, player, handler, buf, responseSender) -> {
             server.execute(() -> {
                 StashLogic.performStash(player);

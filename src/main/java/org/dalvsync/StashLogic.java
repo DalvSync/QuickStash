@@ -11,9 +11,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,13 +28,17 @@ public class StashLogic {
         long currentTime = System.currentTimeMillis();
         World world = player.getWorld();
         BlockPos playerPos = player.getBlockPos();
-        int radius = 8;
+
+        // Читаем радиус из конфига!
+        int radius = QuickStashConfig.getInstance().radius;
+
         boolean movedAnyItem = false;
+        boolean outOfSpace = false;
 
         if (COOLDOWNS.containsKey(playerId)) {
             long lastUsedTime = COOLDOWNS.get(playerId);
             if (currentTime - lastUsedTime < COOLDOWN_TIME) {
-                player.sendMessage(Text.translatable("message.quickstash.cooldown").formatted(Formatting.RED), true);
+                player.sendMessage(Text.translatable("message.quickstash.cooldown").formatted(Formatting.DARK_RED), true);
                 return;
             }
         }
@@ -63,11 +68,23 @@ public class StashLogic {
             ItemStack playerStack = playerInv.getStack(i);
             if (playerStack.isEmpty()) continue;
 
+            int originalCount = playerStack.getCount();
+            boolean hadMatch = false;
+
             for (Inventory targetInventory : nearbyInventories) {
-                if (tryStashItem(playerStack, targetInventory)) {
-                    movedAnyItem = true;
+                if (hasMatchingItem(playerStack, targetInventory)) {
+                    hadMatch = true;
+                    stashIntoInventory(playerStack, targetInventory);
                     if (playerStack.isEmpty()) break;
                 }
+            }
+
+            // Проверка: предмет должен был уйти в сундук, но стак остался непустым
+            if (hadMatch && !playerStack.isEmpty()) {
+                outOfSpace = true;
+            }
+            if (originalCount > playerStack.getCount()) {
+                movedAnyItem = true;
             }
         }
 
@@ -76,54 +93,47 @@ public class StashLogic {
             player.sendMessage(Text.translatable("message.quickstash.success").formatted(Formatting.GREEN), true);
             player.getInventory().markDirty();
         }
+
+        if (outOfSpace) {
+            player.sendMessage(Text.translatable("message.quickstash.full").formatted(Formatting.GOLD), false);
+        }
     }
 
-    private static boolean tryStashItem(ItemStack playerStack, Inventory targetInventory) {
-        boolean containsMatchingItem = false;
-        boolean stashed = false;
-
+    private static boolean hasMatchingItem(ItemStack playerStack, Inventory targetInventory) {
         for (int i = 0; i < targetInventory.size(); i++) {
             ItemStack targetStack = targetInventory.getStack(i);
             if (!targetStack.isEmpty() && ItemStack.canCombine(playerStack, targetStack)) {
-                containsMatchingItem = true;
-                break;
+                return true;
             }
         }
+        return false;
+    }
 
-        if (!containsMatchingItem) {
-            return false;
-        }
-
+    private static void stashIntoInventory(ItemStack playerStack, Inventory targetInventory) {
         for (int i = 0; i < targetInventory.size(); i++) {
-            if (playerStack.isEmpty()) break;
-
+            if (playerStack.isEmpty()) return;
             ItemStack targetStack = targetInventory.getStack(i);
+
             if (!targetStack.isEmpty() && ItemStack.canCombine(playerStack, targetStack)) {
                 int spaceLeft = targetStack.getMaxCount() - targetStack.getCount();
                 if (spaceLeft > 0) {
                     int amountToMove = Math.min(spaceLeft, playerStack.getCount());
                     targetStack.increment(amountToMove);
                     playerStack.decrement(amountToMove);
-                    stashed = true;
                     targetInventory.markDirty();
                 }
             }
         }
 
-        if (!playerStack.isEmpty()) {
-            for (int i = 0; i < targetInventory.size(); i++) {
-                if (playerStack.isEmpty()) break;
+        for (int i = 0; i < targetInventory.size(); i++) {
+            if (playerStack.isEmpty()) return;
+            ItemStack targetStack = targetInventory.getStack(i);
 
-                ItemStack targetStack = targetInventory.getStack(i);
-                if (targetStack.isEmpty()) {
-                    targetInventory.setStack(i, playerStack.copy());
-                    playerStack.setCount(0);
-                    stashed = true;
-                    targetInventory.markDirty();
-                }
+            if (targetStack.isEmpty()) {
+                targetInventory.setStack(i, playerStack.copy());
+                playerStack.setCount(0);
+                targetInventory.markDirty();
             }
         }
-
-        return stashed;
     }
 }
