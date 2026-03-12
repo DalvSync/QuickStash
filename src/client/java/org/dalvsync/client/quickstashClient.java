@@ -17,12 +17,11 @@ public class quickstashClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        // В 1.20.1 категория - это просто текст
         stashKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.quickstash.stash",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_X,
-                "category.quickstash.general"
+                "key.category.quickstash.general"
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

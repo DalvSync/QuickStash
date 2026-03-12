@@ -26,7 +26,7 @@ public class QuickStashConfig {
             }
         } else {
             instance = new QuickStashConfig();
-            save(); // Создаем файл, если его нет
+            save();
         }
     }
 
