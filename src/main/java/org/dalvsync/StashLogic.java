@@ -20,6 +20,7 @@ import java.util.UUID;
 public class StashLogic {
 
     private static final Map<UUID, Long> COOLDOWNS = new HashMap<>();
+    private static final Map<UUID, Long> WARNING_SOUNDS = new HashMap<>();
     private static final long COOLDOWN_TIME = 1000;
 
     public static void performStash(ServerPlayerEntity player) {
@@ -36,7 +37,12 @@ public class StashLogic {
         if (COOLDOWNS.containsKey(playerId)) {
             long lastUsedTime = COOLDOWNS.get(playerId);
             if (currentTime - lastUsedTime < COOLDOWN_TIME) {
-                world.playSound(null, player.getBlockPos(), quickstash.WAIT_MESSAGE_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
+                Long lastWarningFor = WARNING_SOUNDS.get(playerId);
+                if (lastWarningFor == null || lastWarningFor != lastUsedTime) {
+                    world.playSound(null, player.getBlockPos(), quickstash.WAIT_MESSAGE_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
+                    WARNING_SOUNDS.put(playerId, lastUsedTime);
+                }
+
                 player.sendMessage(Text.translatable("message.quickstash.cooldown").formatted(Formatting.DARK_RED), true);
                 return;
             }
@@ -93,7 +99,9 @@ public class StashLogic {
         }
 
         if (outOfSpace) {
-            world.playSound(null, player.getBlockPos(), quickstash.INVENTORY_FULL_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
+            if (!movedAnyItem) {
+                world.playSound(null, player.getBlockPos(), quickstash.INVENTORY_FULL_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
+            }
             player.sendMessage(Text.translatable("message.quickstash.full").formatted(Formatting.GOLD), false);
         }
     }
