@@ -6,7 +6,6 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.text.Text;
@@ -21,6 +20,7 @@ import java.util.UUID;
 public class StashLogic {
 
     private static final Map<UUID, Long> COOLDOWNS = new HashMap<>();
+    private static final Map<UUID, Long> WARNING_SOUNDS = new HashMap<>();
     private static final long COOLDOWN_TIME = 1000;
 
     public static void performStash(ServerPlayerEntity player) {
@@ -37,6 +37,12 @@ public class StashLogic {
         if (COOLDOWNS.containsKey(playerId)) {
             long lastUsedTime = COOLDOWNS.get(playerId);
             if (currentTime - lastUsedTime < COOLDOWN_TIME) {
+                Long lastWarningFor = WARNING_SOUNDS.get(playerId);
+                if (lastWarningFor == null || lastWarningFor != lastUsedTime) {
+                    world.playSound(null, player.getBlockPos(), quickstash.WAIT_MESSAGE_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
+                    WARNING_SOUNDS.put(playerId, lastUsedTime);
+                }
+
                 player.sendMessage(Text.translatable("message.quickstash.cooldown").formatted(Formatting.DARK_RED), true);
                 return;
             }
@@ -87,12 +93,15 @@ public class StashLogic {
         }
 
         if (movedAnyItem) {
-            world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, 1.2f);
+            world.playSound(null, player.getBlockPos(), quickstash.SUCCESS_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
             player.sendMessage(Text.translatable("message.quickstash.success").formatted(Formatting.GREEN), true);
             player.getInventory().markDirty();
         }
 
         if (outOfSpace) {
+            if (!movedAnyItem) {
+                world.playSound(null, player.getBlockPos(), quickstash.INVENTORY_FULL_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
+            }
             player.sendMessage(Text.translatable("message.quickstash.full").formatted(Formatting.GOLD), false);
         }
     }
