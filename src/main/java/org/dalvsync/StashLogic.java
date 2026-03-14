@@ -6,11 +6,11 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,12 +20,13 @@ import java.util.UUID;
 public class StashLogic {
 
     private static final Map<UUID, Long> COOLDOWNS = new HashMap<>();
+    private static final Map<UUID, Long> WARNING_SOUNDS = new HashMap<>();
     private static final long COOLDOWN_TIME = 1000;
 
     public static void performStash(ServerPlayerEntity player) {
         UUID playerId = player.getUuid();
         long currentTime = System.currentTimeMillis();
-        World world = player.getEntityWorld();
+        World world = player.getWorld();
         BlockPos playerPos = player.getBlockPos();
 
         int radius = QuickStashConfig.getInstance().radius;
@@ -36,6 +37,12 @@ public class StashLogic {
         if (COOLDOWNS.containsKey(playerId)) {
             long lastUsedTime = COOLDOWNS.get(playerId);
             if (currentTime - lastUsedTime < COOLDOWN_TIME) {
+                Long lastWarningFor = WARNING_SOUNDS.get(playerId);
+                if (lastWarningFor == null || lastWarningFor != lastUsedTime) {
+                    world.playSound(null, player.getBlockPos(), quickstash.WAIT_MESSAGE_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
+                    WARNING_SOUNDS.put(playerId, lastUsedTime);
+                }
+
                 player.sendMessage(Text.translatable("message.quickstash.cooldown").formatted(Formatting.DARK_RED), true);
                 return;
             }
@@ -86,17 +93,19 @@ public class StashLogic {
         }
 
         if (movedAnyItem) {
-            world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, 1.2f);
+            world.playSound(null, player.getBlockPos(), quickstash.SUCCESS_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
             player.sendMessage(Text.translatable("message.quickstash.success").formatted(Formatting.GREEN), true);
             player.getInventory().markDirty();
         }
 
         if (outOfSpace) {
+            if (!movedAnyItem) {
+                world.playSound(null, player.getBlockPos(), quickstash.INVENTORY_FULL_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
+            }
             player.sendMessage(Text.translatable("message.quickstash.full").formatted(Formatting.GOLD), false);
         }
     }
 
-    // Вспомогательный метод просто проверяет, есть ли такой предмет в сундуке
     private static boolean hasMatchingItem(ItemStack playerStack, Inventory targetInventory) {
         for (int i = 0; i < targetInventory.size(); i++) {
             ItemStack targetStack = targetInventory.getStack(i);
@@ -107,9 +116,7 @@ public class StashLogic {
         return false;
     }
 
-    // Идеальный 2-х шаговый алгоритм укладки (версия 1.21.11)
     private static void stashIntoInventory(ItemStack playerStack, Inventory targetInventory) {
-        // Шаг 1: Дополняем неполные стаки
         for (int i = 0; i < targetInventory.size(); i++) {
             if (playerStack.isEmpty()) return;
             ItemStack targetStack = targetInventory.getStack(i);
@@ -125,7 +132,6 @@ public class StashLogic {
             }
         }
 
-        // Шаг 2: Кладем остатки в пустые слоты
         for (int i = 0; i < targetInventory.size(); i++) {
             if (playerStack.isEmpty()) return;
             ItemStack targetStack = targetInventory.getStack(i);
