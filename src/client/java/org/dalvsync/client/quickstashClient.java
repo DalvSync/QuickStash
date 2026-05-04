@@ -3,34 +3,42 @@ package org.dalvsync.client;
 import org.dalvsync.network.StashRequestPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 
 public class quickstashClient implements ClientModInitializer {
-    private static KeyBinding stashKeyBinding;
+
+    // 1. Офіційно реєструємо категорію як окремий об'єкт
+    public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
+            Identifier.fromNamespaceAndPath("quickstash", "general")
+    );
+
+    private static KeyMapping stashKeyBinding;
 
     @Override
     public void onInitializeClient() {
-        stashKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+
+        // 2. Передаємо об'єкт CATEGORY як останній аргумент
+        stashKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.quickstash.stash",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM, // Явна вказівка, що це кнопка клавіатури
                 GLFW.GLFW_KEY_X,
-                KeyBinding.Category.create(Identifier.of("quickstash", "general"))
+                CATEGORY
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (stashKeyBinding.wasPressed()) {
-                if (client.player != null && client.currentScreen == null) {
+            while (stashKeyBinding.consumeClick()) {
+                if (client.player != null && client.screen == null) {
 
                     boolean hasItemsToSort = false;
                     for (int i = 9; i < 36; i++) {
-                        if (!client.player.getInventory().getStack(i).isEmpty()) {
+                        if (!client.player.getInventory().getItem(i).isEmpty()) {
                             hasItemsToSort = true;
                             break;
                         }
@@ -39,7 +47,7 @@ public class quickstashClient implements ClientModInitializer {
                     if (hasItemsToSort) {
                         ClientPlayNetworking.send(new StashRequestPayload());
                     } else {
-                        client.player.sendMessage(Text.translatable("message.quickstash.empty_inventory").formatted(Formatting.YELLOW), true);
+                        client.player.sendSystemMessage(Component.translatable("message.quickstash.empty_inventory").withStyle(ChatFormatting.YELLOW));
                     }
                 }
             }
