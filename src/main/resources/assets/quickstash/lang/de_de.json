@@ -1,0 +1,9 @@
+{
+  "key.category.quickstash.general": "Quick Stash",
+  "key.quickstash.stash": "Gegenstände in nahegelegene Truhen verstauen",
+  "message.quickstash.success": "Gegenstände erfolgreich sortiert!",
+  "message.quickstash.cooldown": "Warte!",
+  "message.quickstash.empty_inventory": "Nichts zum Sortieren",
+  "message.quickstash.no_containers": "Es gibt keine Truhen in der Nähe",
+  "message.quickstash.full": "Truhen sind voll, kein Platz mehr"
+}
