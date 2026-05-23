@@ -29,7 +29,6 @@ public class quickstash implements ModInitializer {
         Registry.register(BuiltInRegistries.SOUND_EVENT, SUCCESS_ID, SUCCESS_EVENT);
         Registry.register(BuiltInRegistries.SOUND_EVENT, WAIT_MESSAGE_ID, WAIT_MESSAGE_EVENT);
 
-        // Виправлено: правильний метод називається serverboundPlay()
         PayloadTypeRegistry.serverboundPlay().register(StashRequestPayload.ID, StashRequestPayload.CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(StashRequestPayload.ID, (payload, context) -> {

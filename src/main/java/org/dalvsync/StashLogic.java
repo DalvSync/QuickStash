@@ -42,7 +42,6 @@ public class StashLogic {
                     WARNING_SOUNDS.put(playerId, lastUsedTime);
                 }
 
-                // Виправлено: використання sendOverlayMessage замість displayClientMessage(..., true)
                 player.sendOverlayMessage(Component.translatable("message.quickstash.cooldown").withStyle(ChatFormatting.DARK_RED));
                 return;
             }
@@ -65,7 +64,6 @@ public class StashLogic {
         }
 
         if (nearbyInventories.isEmpty()) {
-            // Виправлено: використання sendOverlayMessage замість displayClientMessage(..., true)
             player.sendOverlayMessage(Component.translatable("message.quickstash.no_containers").withStyle(ChatFormatting.YELLOW));
             return;
         }
@@ -95,7 +93,7 @@ public class StashLogic {
 
         if (movedAnyItem) {
             world.playSound(null, player.blockPosition(), quickstash.SUCCESS_EVENT, SoundSource.PLAYERS, 0.5f, 1.2f);
-            // Виправлено: використання sendOverlayMessage замість displayClientMessage(..., true)
+
             player.sendOverlayMessage(Component.translatable("message.quickstash.success").withStyle(ChatFormatting.GREEN));
             player.getInventory().setChanged();
         }
@@ -104,7 +102,6 @@ public class StashLogic {
             if (!movedAnyItem) {
                 world.playSound(null, player.blockPosition(), quickstash.INVENTORY_FULL_EVENT, SoundSource.PLAYERS, 0.5f, 1.2f);
             }
-            // Виправлено: використання sendSystemMessage для чату замість displayClientMessage(..., false)
             player.sendSystemMessage(Component.translatable("message.quickstash.full").withStyle(ChatFormatting.GOLD));
         }
     }
