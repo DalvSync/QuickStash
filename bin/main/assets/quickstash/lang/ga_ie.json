@@ -1,0 +1,9 @@
+{
+  "key.category.quickstash.general": "Quick Stash",
+  "key.quickstash.stash": "Cuir earraí i gcófraí in aice láimhe",
+  "message.quickstash.success": "Earraí curtha in eagar go rathúil!",
+  "message.quickstash.cooldown": "Fan!",
+  "message.quickstash.empty_inventory": "Níl aon rud le cur in eagar",
+  "message.quickstash.no_containers": "Níl aon chófraí in aice láimhe",
+  "message.quickstash.full": "Tá na cófraí lán, níl aon spás fágtha"
+}

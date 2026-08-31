@@ -1,0 +1,9 @@
+{
+  "key.category.quickstash.general": "Quick Stash",
+  "key.quickstash.stash": "Schowaj przedmioty do pobliskich skrzyń",
+  "message.quickstash.success": "Przedmioty zostały pomyślnie posortowane!",
+  "message.quickstash.cooldown": "Czekaj!",
+  "message.quickstash.empty_inventory": "Brak przedmiotów do posortowania",
+  "message.quickstash.no_containers": "W pobliżu nie ma żadnych skrzyń",
+  "message.quickstash.full": "Skrzynie są pełne, brak miejsca"
+}

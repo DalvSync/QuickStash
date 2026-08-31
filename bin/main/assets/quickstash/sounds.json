@@ -1,0 +1,17 @@
+{
+  "inv_full": {
+    "sounds": [
+      "quickstash:inv_full"
+    ]
+  },
+  "success": {
+    "sounds": [
+      "quickstash:success"
+    ]
+  },
+  "wait_message": {
+    "sounds": [
+      "quickstash:wait_message"
+    ]
+  }
+}

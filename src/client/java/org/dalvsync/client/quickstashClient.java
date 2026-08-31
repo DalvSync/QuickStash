@@ -1,45 +1,45 @@
 package org.dalvsync.client;
 
 import org.dalvsync.quickstash;
+import org.dalvsync.StashPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 public class quickstashClient implements ClientModInitializer {
-    private static KeyBinding stashKeyBinding;
+    private static KeyMapping stashKeyBinding;
 
     @Override
     public void onInitializeClient() {
-        stashKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        stashKeyMapping = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.quickstash.stash",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_X,
                 "key.category.quickstash.general"
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (stashKeyBinding.wasPressed()) {
-                if (client.player != null && client.currentScreen == null) {
+            while (stashKeyBinding.consumeClick()) {
+                if (client.player != null && client.screen == null) {
 
                     boolean hasItemsToSort = false;
                     for (int i = 9; i < 36; i++) {
-                        if (!client.player.getInventory().getStack(i).isEmpty()) {
+                        if (!client.player.getInventory().getItem(i).isEmpty()) {
                             hasItemsToSort = true;
                             break;
                         }
                     }
 
                     if (hasItemsToSort) {
-                        ClientPlayNetworking.send(quickstash.STASH_REQUEST_ID, PacketByteBufs.empty());
+                        ClientPlayNetworking.send(new StashPayload());
                     } else {
-                        client.player.sendMessage(Text.translatable("message.quickstash.empty_inventory").formatted(Formatting.YELLOW), true);
+                        client.player.displayClientMessage(Component.translatable("message.quickstash.empty_inventory").withStyle(ChatFormatting.YELLOW), true);
                     }
                 }
             }

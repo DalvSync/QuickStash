@@ -1,15 +1,15 @@
 package org.dalvsync;
 
-import net.minecraft.block.entity.HopperBlockEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.level.block.entity.HopperBlockEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,11 +23,11 @@ public class StashLogic {
     private static final Map<UUID, Long> WARNING_SOUNDS = new HashMap<>();
     private static final long COOLDOWN_TIME = 1000;
 
-    public static void performStash(ServerPlayerEntity player) {
+    public static void performStash(ServerPlayer player) {
         UUID playerId = player.getUuid();
         long currentTime = System.currentTimeMillis();
-        World world = player.getWorld();
-        BlockPos playerPos = player.getBlockPos();
+        Level world = player.level();
+        BlockPos playerPos = player.blockPosition();
 
         int radius = QuickStashConfig.getInstance().radius;
 
@@ -39,44 +39,44 @@ public class StashLogic {
             if (currentTime - lastUsedTime < COOLDOWN_TIME) {
                 Long lastWarningFor = WARNING_SOUNDS.get(playerId);
                 if (lastWarningFor == null || lastWarningFor != lastUsedTime) {
-                    world.playSound(null, player.getBlockPos(), quickstash.WAIT_MESSAGE_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
+                    world.playSound(null, player.blockPosition(), quickstash.WAIT_MESSAGE_EVENT, SoundSource.PLAYERS, 0.5f, 1.2f);
                     WARNING_SOUNDS.put(playerId, lastUsedTime);
                 }
 
-                player.sendMessage(Text.translatable("message.quickstash.cooldown").formatted(Formatting.DARK_RED), true);
+                player.displayClientMessage(Component.translatable("message.quickstash.cooldown").withStyle(ChatFormatting.DARK_RED), true);
                 return;
             }
         }
         COOLDOWNS.put(playerId, currentTime);
 
-        PlayerInventory playerInv = player.getInventory();
+        Inventory playerInv = player.getInventory();
 
-        Iterable<BlockPos> blocksInRadius = BlockPos.iterate(
-                playerPos.add(-radius, -radius, -radius),
-                playerPos.add(radius, radius, radius)
+        Iterable<BlockPos> blocksInRadius = BlockPos.betweenClosed(
+                playerPos.offset(-radius, -radius, -radius),
+                playerPos.offset(radius, radius, radius)
         );
 
-        List<Inventory> nearbyInventories = new ArrayList<>();
+        List<Container> nearbyInventories = new ArrayList<>();
         for (BlockPos pos : blocksInRadius) {
-            Inventory targetInventory = HopperBlockEntity.getInventoryAt(world, pos);
+            Container targetInventory = HopperBlockEntity.getContainerAt(world, pos);
             if (targetInventory != null) {
                 nearbyInventories.add(targetInventory);
             }
         }
 
         if (nearbyInventories.isEmpty()) {
-            player.sendMessage(Text.translatable("message.quickstash.no_containers").formatted(Formatting.YELLOW), true);
+            player.displayClientMessage(Component.translatable("message.quickstash.no_containers").withStyle(ChatFormatting.YELLOW), true);
             return;
         }
 
         for (int i = 9; i < 36; i++) {
-            ItemStack playerStack = playerInv.getStack(i);
+            ItemStack playerStack = playerInv.getItem(i);
             if (playerStack.isEmpty()) continue;
 
             int originalCount = playerStack.getCount();
             boolean hadMatch = false;
 
-            for (Inventory targetInventory : nearbyInventories) {
+            for (Container targetInventory : nearbyInventories) {
                 if (hasMatchingItem(playerStack, targetInventory)) {
                     hadMatch = true;
                     stashIntoInventory(playerStack, targetInventory);
@@ -93,53 +93,53 @@ public class StashLogic {
         }
 
         if (movedAnyItem) {
-            world.playSound(null, player.getBlockPos(), quickstash.SUCCESS_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
-            player.sendMessage(Text.translatable("message.quickstash.success").formatted(Formatting.GREEN), true);
-            player.getInventory().markDirty();
+            world.playSound(null, player.blockPosition(), quickstash.SUCCESS_EVENT, SoundSource.PLAYERS, 0.5f, 1.2f);
+            player.displayClientMessage(Component.translatable("message.quickstash.success").withStyle(ChatFormatting.GREEN), true);
+            player.getInventory().setChanged();
         }
 
         if (outOfSpace) {
             if (!movedAnyItem) {
-                world.playSound(null, player.getBlockPos(), quickstash.INVENTORY_FULL_EVENT, SoundCategory.PLAYERS, 0.5f, 1.2f);
+                world.playSound(null, player.blockPosition(), quickstash.INVENTORY_FULL_EVENT, SoundSource.PLAYERS, 0.5f, 1.2f);
             }
-            player.sendMessage(Text.translatable("message.quickstash.full").formatted(Formatting.GOLD), false);
+            player.displayClientMessage(Component.translatable("message.quickstash.full").withStyle(ChatFormatting.GOLD), false);
         }
     }
 
-    private static boolean hasMatchingItem(ItemStack playerStack, Inventory targetInventory) {
-        for (int i = 0; i < targetInventory.size(); i++) {
-            ItemStack targetStack = targetInventory.getStack(i);
-            if (!targetStack.isEmpty() && ItemStack.canCombine(playerStack, targetStack)) {
+    private static boolean hasMatchingItem(ItemStack playerStack, Container targetInventory) {
+        for (int i = 0; i < targetInventory.getContainerSize(); i++) {
+            ItemStack targetStack = targetInventory.getItem(i);
+            if (!targetStack.isEmpty() && ItemStack.isSameItemSameComponents(playerStack, targetStack)) {
                 return true;
             }
         }
         return false;
     }
 
-    private static void stashIntoInventory(ItemStack playerStack, Inventory targetInventory) {
-        for (int i = 0; i < targetInventory.size(); i++) {
+    private static void stashIntoInventory(ItemStack playerStack, Container targetInventory) {
+        for (int i = 0; i < targetInventory.getContainerSize(); i++) {
             if (playerStack.isEmpty()) return;
-            ItemStack targetStack = targetInventory.getStack(i);
+            ItemStack targetStack = targetInventory.getItem(i);
 
-            if (!targetStack.isEmpty() && ItemStack.canCombine(playerStack, targetStack)) {
-                int spaceLeft = targetStack.getMaxCount() - targetStack.getCount();
+            if (!targetStack.isEmpty() && ItemStack.isSameItemSameComponents(playerStack, targetStack)) {
+                int spaceLeft = targetStack.getMaxStackSize() - targetStack.getCount();
                 if (spaceLeft > 0) {
                     int amountToMove = Math.min(spaceLeft, playerStack.getCount());
-                    targetStack.increment(amountToMove);
-                    playerStack.decrement(amountToMove);
-                    targetInventory.markDirty();
+                    targetStack.grow(amountToMove);
+                    playerStack.shrink(amountToMove);
+                    targetInventory.setChanged();
                 }
             }
         }
 
-        for (int i = 0; i < targetInventory.size(); i++) {
+        for (int i = 0; i < targetInventory.getContainerSize(); i++) {
             if (playerStack.isEmpty()) return;
-            ItemStack targetStack = targetInventory.getStack(i);
+            ItemStack targetStack = targetInventory.getItem(i);
 
             if (targetStack.isEmpty()) {
-                targetInventory.setStack(i, playerStack.copy());
+                targetInventory.setItem(i, playerStack.copy());
                 playerStack.setCount(0);
-                targetInventory.markDirty();
+                targetInventory.setChanged();
             }
         }
     }

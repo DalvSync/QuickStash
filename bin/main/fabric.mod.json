@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "quickstash",
+  "version": "${version}",
+  "name": "QuickStash",
+  "description": "Quick Stash is a lightweight Fabric mod that lets players instantly stash matching items from their inventory into nearby chests/containers with a single key press — without stealing hotbar tools or armor. It’s designed to be simple, server-safe, and respectful of vanilla behaviour.",
+  "authors": [
+    "DalvSync"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/quick-stash",
+    "sources": "https://github.com/DalvSync/QuickStash",
+    "issues": "https://github.com/DalvSync/QuickStash/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "org.dalvsync.client.quickstashDataGenerator"
+    ],
+    "client": [
+      "org.dalvsync.client.quickstashClient"
+    ],
+    "main": [
+      "org.dalvsync.quickstash"
+    ]
+  },
+  "mixins": [
+    "quickstash.mixins.json",
+    {
+      "config": "quickstash.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "26.2"
+  }
+}

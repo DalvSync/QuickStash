@@ -1,0 +1,9 @@
+{
+  "key.category.quickstash.general": "Quick Stash",
+  "key.quickstash.stash": "Déposer les objets dans les coffres à proximité",
+  "message.quickstash.success": "Objets triés avec succès !",
+  "message.quickstash.cooldown": "Attendez !",
+  "message.quickstash.empty_inventory": "Rien à trier",
+  "message.quickstash.no_containers": "Il n'y a pas de coffres à proximité",
+  "message.quickstash.full": "Les coffres sont pleins, plus de place"
+}

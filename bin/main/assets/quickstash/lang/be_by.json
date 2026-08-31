@@ -1,0 +1,9 @@
+{
+  "key.category.quickstash.general": "Quick Stash",
+  "key.quickstash.stash": "Схаваць рэчы ў бліжэйшыя куфры",
+  "message.quickstash.success": "Рэчы паспяхова адсартаваныя!",
+  "message.quickstash.cooldown": "Пачакайце!",
+  "message.quickstash.empty_inventory": "Няма чаго сартаваць",
+  "message.quickstash.no_containers": "Паблізу няма куфраў",
+  "message.quickstash.full": "Куфры поўныя, няма месца"
+}
