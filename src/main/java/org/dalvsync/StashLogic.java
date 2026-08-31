@@ -24,7 +24,7 @@ public class StashLogic {
     private static final long COOLDOWN_TIME = 1000;
 
     public static void performStash(ServerPlayer player) {
-        UUID playerId = player.getUuid();
+        UUID playerId = player.getUUID();
         long currentTime = System.currentTimeMillis();
         Level world = player.level();
         BlockPos playerPos = player.blockPosition();
@@ -43,7 +43,7 @@ public class StashLogic {
                     WARNING_SOUNDS.put(playerId, lastUsedTime);
                 }
 
-                player.displayClientMessage(Component.translatable("message.quickstash.cooldown").withStyle(ChatFormatting.DARK_RED), true);
+                player.sendSystemMessage(Component.translatable("message.quickstash.cooldown").withStyle(ChatFormatting.DARK_RED));
                 return;
             }
         }
@@ -65,7 +65,7 @@ public class StashLogic {
         }
 
         if (nearbyInventories.isEmpty()) {
-            player.displayClientMessage(Component.translatable("message.quickstash.no_containers").withStyle(ChatFormatting.YELLOW), true);
+            player.sendSystemMessage(Component.translatable("message.quickstash.no_containers").withStyle(ChatFormatting.YELLOW));
             return;
         }
 
@@ -94,7 +94,7 @@ public class StashLogic {
 
         if (movedAnyItem) {
             world.playSound(null, player.blockPosition(), quickstash.SUCCESS_EVENT, SoundSource.PLAYERS, 0.5f, 1.2f);
-            player.displayClientMessage(Component.translatable("message.quickstash.success").withStyle(ChatFormatting.GREEN), true);
+            player.sendSystemMessage(Component.translatable("message.quickstash.success").withStyle(ChatFormatting.GREEN));
             player.getInventory().setChanged();
         }
 
@@ -102,7 +102,7 @@ public class StashLogic {
             if (!movedAnyItem) {
                 world.playSound(null, player.blockPosition(), quickstash.INVENTORY_FULL_EVENT, SoundSource.PLAYERS, 0.5f, 1.2f);
             }
-            player.displayClientMessage(Component.translatable("message.quickstash.full").withStyle(ChatFormatting.GOLD), false);
+            player.sendSystemMessage(Component.translatable("message.quickstash.full").withStyle(ChatFormatting.GOLD));
         }
     }
 
