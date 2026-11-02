@@ -23,7 +23,7 @@ public class StashLogic {
     private static final Map<UUID, Long> WARNING_SOUNDS = new HashMap<>();
     private static final long COOLDOWN_TIME = 1000;
 
-    public static void performStash(ServerPlayerEntity player) {
+    public static void performStash(ServerPlayerEntity player, long lockedSlotsMask) {
         UUID playerId = player.getUuid();
         long currentTime = System.currentTimeMillis();
         World world = player.getWorld();
@@ -70,6 +70,8 @@ public class StashLogic {
         }
 
         for (int i = 9; i < 36; i++) {
+            if ((lockedSlotsMask & (1L << i)) != 0) continue;
+
             ItemStack playerStack = playerInv.getStack(i);
             if (playerStack.isEmpty()) continue;
 

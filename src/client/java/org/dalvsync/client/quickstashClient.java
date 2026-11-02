@@ -26,17 +26,19 @@ public class quickstashClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (stashKeyBinding.wasPressed()) {
                 if (client.player != null && client.currentScreen == null) {
+                    long lockedSlotsMask = InventoryProfilesNextCompat.getLockedSlotsMask();
 
                     boolean hasItemsToSort = false;
                     for (int i = 9; i < 36; i++) {
-                        if (!client.player.getInventory().getStack(i).isEmpty()) {
+                        if ((lockedSlotsMask & (1L << i)) == 0
+                                && !client.player.getInventory().getStack(i).isEmpty()) {
                             hasItemsToSort = true;
                             break;
                         }
                     }
 
                     if (hasItemsToSort) {
-                        ClientPlayNetworking.send(new StashRequestPayload());
+                        ClientPlayNetworking.send(new StashRequestPayload(lockedSlotsMask));
                     } else {
                         client.player.sendMessage(Text.translatable("message.quickstash.empty_inventory").formatted(Formatting.YELLOW), true);
                     }
