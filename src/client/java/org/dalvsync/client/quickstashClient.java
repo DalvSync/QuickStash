@@ -9,7 +9,6 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.Identifier;
 import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.glfw.GLFW;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 
@@ -20,25 +19,26 @@ public class quickstashClient implements ClientModInitializer {
     public void onInitializeClient() {
         stashKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.quickstash.stash",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_X,
+                InputConstants.KEY_X,
                 KeyMapping.Category.register(Identifier.fromNamespaceAndPath(quickstash.MOD_ID, "general"))
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (stashKeyBinding.consumeClick()) {
                 if (client.player != null && client.gui.screen() == null) {
+                    long lockedSlotsMask = InventoryProfilesNextCompat.getLockedSlotsMask();
 
                     boolean hasItemsToSort = false;
                     for (int i = 9; i < 36; i++) {
-                        if (!client.player.getInventory().getItem(i).isEmpty()) {
+                        if ((lockedSlotsMask & (1L << i)) == 0
+                                && !client.player.getInventory().getItem(i).isEmpty()) {
                             hasItemsToSort = true;
                             break;
                         }
                     }
 
                     if (hasItemsToSort) {
-                        ClientPlayNetworking.send(new StashPayload());
+                        ClientPlayNetworking.send(new StashPayload(lockedSlotsMask));
                     } else {
                         client.player.sendSystemMessage(Component.translatable("message.quickstash.empty_inventory").withStyle(ChatFormatting.YELLOW));
                     }

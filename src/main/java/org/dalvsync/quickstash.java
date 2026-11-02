@@ -30,7 +30,7 @@ public class quickstash implements ModInitializer {
 
         ServerPlayNetworking.registerGlobalReceiver(StashPayload.TYPE, (payload, context) -> {
             context.server().execute(() -> {
-                StashLogic.performStash(context.player());
+                StashLogic.performStash(context.player(), payload.lockedSlotsMask());
             });
         });
     }
