@@ -26,8 +26,9 @@ public class quickstash implements ModInitializer {
         Registry.register(Registries.SOUND_EVENT, INVENTORY_FULL_ID, INVENTORY_FULL_EVENT);
 
         ServerPlayNetworking.registerGlobalReceiver(STASH_REQUEST_ID, (server, player, handler, buf, responseSender) -> {
+            long lockedSlotsMask = buf.readVarLong();
             server.execute(() -> {
-                StashLogic.performStash(player);
+                StashLogic.performStash(player, lockedSlotsMask);
             });
         });
     }

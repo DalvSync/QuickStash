@@ -16,6 +16,7 @@ Press the configured hotkey (default: `X`) while in-game and Quick Stash will:
 * **One-press stashing:** user-friendly single-key workflow.
 * **Server-side logic:** all item movement is performed on the server to eliminate synchronization issues.
 * **Hotbar-safe:** items in the hotbar (first 9 slots), armor and offhand are never touched.
+* **Locked-slot-aware:** when Inventory Profiles Next is installed, locked main-inventory slots are skipped.
 * **Container-aware:** only containers that already have at least one stack of the same item are considered — preserves expected player behaviour.
 
 ### 🔧 Compatibility
